@@ -2,76 +2,61 @@ package routes
 
 import database.UserRepositoryInMemory
 import domain.entity.User
-import io.javalin.Javalin
-import io.javalin.apibuilder.ApiBuilder.crud
-import io.javalin.apibuilder.CrudHandler
-import io.javalin.http.Context
-import io.javalin.plugin.openapi.dsl.OpenApiCrudHandlerDocumentation
-import io.javalin.plugin.openapi.dsl.document
-import io.javalin.plugin.openapi.dsl.documentCrud
-import io.javalin.plugin.openapi.dsl.documented
 import model.user.*
+import org.http4k.contract.ContractRoute
+import org.http4k.contract.bindContract
+import org.http4k.core.Body
+import org.http4k.core.Method
+import org.http4k.core.Response
+import org.http4k.core.Status.Companion.CREATED
+import org.http4k.core.Status.Companion.OK
+import org.http4k.core.with
+import org.http4k.format.Gson.auto
+import org.http4k.lens.Path
+import org.http4k.lens.long
 import usecase.invoke
 import usecase.user.*
 
-fun Javalin.userRoutes() {
+
+val userIdPath = Path.long().of("userId")
+val getUsersLens = Body.auto<GetUsersResponse>().toLens()
+val postUserRequestLens = Body.auto<PostUserRequest>().toLens()
+val postUserResponseLens = Body.auto<PostUserResponse>().toLens()
+val userDtoLens = Body.auto<UserDTO>().toLens()
+val putUserRequestLens = Body.auto<PutUserRequest>().toLens()
+
+fun userRoutes(): List<ContractRoute> {
     val userRepository = UserRepositoryInMemory()
-
-    val userDocumentation: OpenApiCrudHandlerDocumentation = documentCrud()
-        .getAll(document().jsonArray<UserDTO>("200"))
-        .getOne(document().pathParam<String>("userId").json<UserDTO>("200"))
-        .create(document().body<PostUserRequest>().json<PostUserResponse>("200"))
-        .update(document().pathParam<String>("userId").body<PutUserRequest>().result<Unit>("200"))
-        .delete(document().pathParam<String>("userId").result<UserDTO>("200"))
-
-    routes {
-        crud("/user/:userId", documented(userDocumentation, object : CrudHandler {
-            override fun create(ctx: Context) {
-                ctx
-                    .body<PostUserRequest>()
-                    .let { body ->
-                        createUserUseCase(userRepository).invoke(User(name = body.name))
-                    }
-                    .let { userId -> ctx.json(PostUserResponse(userId)) }
-            }
-
-            override fun delete(ctx: Context, resourceId: String) {
-                deleteUserUseCase(userRepository)
-                    .invoke(resourceId.toLong())
-                    .let { user ->
-                        ctx
-                            .status(200)
-                            .json(user.toDto())
-                    }
-            }
-
-            override fun getAll(ctx: Context) {
-                listUsersUseCase(userRepository)
-                    .invoke()
-                    .let { users ->
-                        ctx.json(users.map { it.toDto() })
-                    }
-            }
-
-            override fun getOne(ctx: Context, resourceId: String) {
-                getUserUseCase(userRepository)
-                    .invoke(resourceId.toLong())
-                    .let { user ->
-                        ctx
-                            .status(200)
-                            .json(user.toDto())
-                    }
-            }
-
-            override fun update(ctx: Context, resourceId: String) {
-                ctx
-                    .body<PutUserRequest>()
-                    .let { body ->
-                        updateUserUseCase(userRepository).invoke(User(name = body.name, id = resourceId.toLong()))
-                        ctx.status(200)
-                    }
-            }
-
-        }))
-    }
+    return listOf(
+        "/user" bindContract Method.GET to { _ ->
+            val users = listUsersUseCase(userRepository).invoke()
+            val response = GetUsersResponse(users = users.map { it.toDto() })
+            Response(OK)
+                .with(getUsersLens of response)
+        },
+        "/user" bindContract Method.POST to { request ->
+            val body = postUserRequestLens(request)
+            val userId = createUserUseCase(userRepository).invoke(User(name = body.name))
+            Response(CREATED)
+                .with(postUserResponseLens of PostUserResponse(createdUserId = userId))
+        },
+        "/user/{userId}" bindContract Method.GET to { request ->
+            val userId = userIdPath(request)
+            val user = getUserUseCase(userRepository).invoke(userId)
+            Response(OK)
+                .with(userDtoLens of user.toDto())
+        },
+        "/user/{userId}" bindContract Method.PUT to { request ->
+            val userId = userIdPath(request)
+            val body = putUserRequestLens(request)
+            updateUserUseCase(userRepository).invoke(User(id = userId, name = body.name))
+            Response(OK)
+        },
+        "/user/{userId}" bindContract Method.DELETE to { request ->
+            val userId = userIdPath(request)
+            val user = deleteUserUseCase(userRepository).invoke(userId)
+            Response(OK)
+                .with(userDtoLens of user.toDto())
+        }
+    )
 }

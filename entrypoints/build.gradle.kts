@@ -17,12 +17,23 @@ repositories {
 dependencies {
     implementation(project(":core"))
     implementation(project(":providers"))
-    implementation("io.javalin:javalin:3.10.1")
-    implementation("io.javalin:javalin-openapi:3.10.1")
+
+    //HTTP Library
+    implementation(platform("org.http4k:http4k-bom:3.260.0"))
+    implementation("org.http4k:http4k-core")
+    implementation("org.http4k:http4k-contract")
+    implementation("org.http4k:http4k-server-jetty")
+    implementation("org.http4k:http4k-format-gson")
+
+    //Swagger UI
+    implementation("org.webjars:swagger-ui:3.25.2")
+
+    //Logs
     implementation("org.slf4j:slf4j-simple:1.7.30")
+    //Tests
     testImplementation(kotlin("test-junit"))
 }
-tasks.withType<KotlinCompile>() {
+tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 application {
