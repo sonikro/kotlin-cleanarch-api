@@ -1,19 +1,12 @@
-import configuration.configContentNegotiation
-import configuration.configDI
-import configuration.configExceptionHandling
-import io.ktor.routing.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import configuration.setup
+import io.javalin.Javalin
 import routes.userRoutes
 
 fun main() {
-    val server = embeddedServer(Netty, 8080) {
-        configDI()
-        configContentNegotiation()
-        configExceptionHandling()
-        routing {
+    val app = Javalin
+        .create { it.setup() }
+        .apply {
             userRoutes()
         }
-    }
-    server.start(wait = true)
+        .start(8080)
 }

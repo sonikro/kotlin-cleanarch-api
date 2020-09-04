@@ -1,72 +1,77 @@
 package routes
 
+import database.UserRepositoryInMemory
 import domain.entity.User
-import exception.BadRequestException
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import model.user.PostUserRequest
-import model.user.PostUserResponse
-import model.user.PutUserRequest
-import model.user.toDto
-import org.kodein.di.instance
-import org.kodein.di.ktor.di
+import io.javalin.Javalin
+import io.javalin.apibuilder.ApiBuilder.crud
+import io.javalin.apibuilder.CrudHandler
+import io.javalin.http.Context
+import io.javalin.plugin.openapi.dsl.OpenApiCrudHandlerDocumentation
+import io.javalin.plugin.openapi.dsl.document
+import io.javalin.plugin.openapi.dsl.documentCrud
+import io.javalin.plugin.openapi.dsl.documented
+import model.user.*
 import usecase.invoke
-import usecase.repository.UserRepository
 import usecase.user.*
 
-fun Routing.userRoutes() {
-    val userRepository by di().instance<UserRepository>()
+fun Javalin.userRoutes() {
+    val userRepository = UserRepositoryInMemory()
 
-    route("/user") {
-        get {
-            listUsersUseCase(userRepository)
-                .invoke()
-                .let { users ->
-                    call.respond(HttpStatusCode.OK, users.map { it.toDto() })
-                }
-        }
-        get("/{userId}") {
-            val userId = call.parameters["userId"]?.toLong() ?: throw BadRequestException("Missing userId")
-            getUserUseCase(userRepository)
-                .invoke(userId)
-                .let { user ->
-                    call.respond(HttpStatusCode.OK, user.toDto())
-                }
-        }
-        post {
-            call
-                .receive<PostUserRequest>()
-                .let { body ->
-                    createUserUseCase(userRepository).invoke(User(name = body.name))
-                }
-                .let { userId ->
-                    call.respond(HttpStatusCode.Created, PostUserResponse(userId))
-                }
-        }
+    val userDocumentation: OpenApiCrudHandlerDocumentation = documentCrud()
+        .getAll(document().jsonArray<UserDTO>("200"))
+        .getOne(document().pathParam<String>("userId").json<UserDTO>("200"))
+        .create(document().body<PostUserRequest>().json<PostUserResponse>("200"))
+        .update(document().pathParam<String>("userId").body<PutUserRequest>().result<Unit>("200"))
+        .delete(document().pathParam<String>("userId").result<UserDTO>("200"))
 
-        put("/{userId}") {
-            val userId = call.parameters["userId"]?.toLong() ?: throw BadRequestException("Missing userId")
-            call
-                .receive<PutUserRequest>()
-                .let { body ->
-                    updateUserUseCase(userRepository).invoke(User(name = body.name, id = userId))
-                }
-                .let {
-                    call.respond(HttpStatusCode.NoContent)
-                }
-        }
+    routes {
+        crud("/user/:userId", documented(userDocumentation, object : CrudHandler {
+            override fun create(ctx: Context) {
+                ctx
+                    .body<PostUserRequest>()
+                    .let { body ->
+                        createUserUseCase(userRepository).invoke(User(name = body.name))
+                    }
+                    .let { userId -> ctx.json(PostUserResponse(userId)) }
+            }
 
-        delete("/{userId}") {
-            val userId = call.parameters["userId"]?.toLong() ?: throw BadRequestException("Missing userId")
-            deleteUserUseCase(userRepository)
-                .invoke(userId)
-                .let { user ->
-                    call.respond(HttpStatusCode.OK, user.toDto())
-                }
-        }
+            override fun delete(ctx: Context, resourceId: String) {
+                deleteUserUseCase(userRepository)
+                    .invoke(resourceId.toLong())
+                    .let { user ->
+                        ctx
+                            .status(200)
+                            .json(user.toDto())
+                    }
+            }
 
+            override fun getAll(ctx: Context) {
+                listUsersUseCase(userRepository)
+                    .invoke()
+                    .let { users ->
+                        ctx.json(users.map { it.toDto() })
+                    }
+            }
+
+            override fun getOne(ctx: Context, resourceId: String) {
+                getUserUseCase(userRepository)
+                    .invoke(resourceId.toLong())
+                    .let { user ->
+                        ctx
+                            .status(200)
+                            .json(user.toDto())
+                    }
+            }
+
+            override fun update(ctx: Context, resourceId: String) {
+                ctx
+                    .body<PutUserRequest>()
+                    .let { body ->
+                        updateUserUseCase(userRepository).invoke(User(name = body.name, id = resourceId.toLong()))
+                        ctx.status(200)
+                    }
+            }
+
+        }))
     }
 }

@@ -17,10 +17,9 @@ repositories {
 dependencies {
     implementation(project(":core"))
     implementation(project(":providers"))
-    implementation("org.kodein.di:kodein-di:7.0.0")
-    implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:7.0.0")
-    implementation("io.ktor:ktor-server-netty:1.4.0")
-    implementation("io.ktor:ktor-gson:1.4.0")
+    implementation("io.javalin:javalin:3.10.1")
+    implementation("io.javalin:javalin-openapi:3.10.1")
+    implementation("org.slf4j:slf4j-simple:1.7.30")
     testImplementation(kotlin("test-junit"))
 }
 tasks.withType<KotlinCompile>() {
