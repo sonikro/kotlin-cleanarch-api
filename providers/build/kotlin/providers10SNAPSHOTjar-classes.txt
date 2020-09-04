@@ -1,0 +1,1 @@
+C:\Users\z0j85tw\Sources\kotlin-cleanarch-api\providers\build\classes\kotlin\main\database\UserRepositoryInMemory.class;C:\Users\z0j85tw\Sources\kotlin-cleanarch-api\providers\build\classes\kotlin\main\exception\ProviderException.class
