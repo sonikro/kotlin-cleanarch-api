@@ -23,7 +23,7 @@ dependencies {
     implementation("org.http4k:http4k-core")
     implementation("org.http4k:http4k-contract")
     implementation("org.http4k:http4k-server-jetty")
-    implementation("org.http4k:http4k-format-gson")
+    implementation("org.http4k:http4k-format-jackson")
 
     //Swagger UI
     implementation("org.webjars:swagger-ui:3.25.2")
