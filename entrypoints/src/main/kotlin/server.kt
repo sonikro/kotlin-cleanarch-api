@@ -1,36 +1,19 @@
-import configuration.swaggerUi
-import org.http4k.contract.contract
-import org.http4k.contract.openapi.ApiInfo
-import org.http4k.contract.openapi.v3.OpenApi3
-import org.http4k.core.Method
-import org.http4k.core.then
-import org.http4k.filter.CorsPolicy
-import org.http4k.filter.DebuggingFilters
-import org.http4k.filter.ServerFilters
-import org.http4k.format.Jackson
-import org.http4k.routing.routes
-import org.http4k.server.Jetty
-import org.http4k.server.asServer
-import routes.userRoutes
+import io.micronaut.runtime.Micronaut
+import io.swagger.v3.oas.annotations.OpenAPIDefinition
+import io.swagger.v3.oas.annotations.info.Info
 
-fun main() {
-    val swaggerDescriptionPath = "/api/swagger.json"
-    val contractHandlers = contract {
-        renderer = OpenApi3(ApiInfo("kotlin-cleanarch-api", "1.0.0", "API description"), Jackson)
-        descriptionPath = swaggerDescriptionPath
-        routes += userRoutes()
-    }
+@OpenAPIDefinition(
+    info = Info(
+        title = "kotlin-cleanarch-api",
+        version = "0.0.1"
+    )
+)
+object Api {
+}
 
-    DebuggingFilters
-        .PrintRequestAndResponse()
-        .then(ServerFilters.Cors(CorsPolicy(listOf("*"), listOf("*"), Method.values().toList())))
-        .then(ServerFilters.CatchLensFailure)
-        .then(
-            routes(
-                contractHandlers,
-                swaggerUi(swaggerDescriptionPath)
-            )
-        )
-        .asServer(Jetty(8080))
+fun main(args: Array<String>) {
+    Micronaut.build()
+        .args(*args)
+        .packages("com.example")
         .start()
 }
