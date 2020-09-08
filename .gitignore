@@ -135,3 +135,4 @@ build/**
 core/build
 providers/build
 entrypoints/build
+.gradle
