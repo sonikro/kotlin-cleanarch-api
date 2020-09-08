@@ -1,6 +1,6 @@
 import database.UserRepositoryInMemory
 import domain.entity.User
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.expect
 
 class UserRepositoryInMemoryTest {

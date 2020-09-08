@@ -32,7 +32,7 @@ class UserRepositoryInMemory : UserRepository {
     override fun listUsers(): List<User> = userList
 
     override fun updateUser(user: User) {
-        val existingUser = userList.find { user -> user.id == user.id }
+        val existingUser = userList.find { userTarget -> userTarget.id == user.id }
             ?: throw ProviderException("Could not find user $user")
         userList[existingUser.id.toInt()] = user.copy()
     }
