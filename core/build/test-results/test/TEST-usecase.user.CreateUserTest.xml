@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="usecase.user.CreateUserTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2020-09-03T14:27:53" hostname="WDX5CG01992M0" time="2.62">
-  <properties/>
-  <testcase name="createUser use case returns new user ID" classname="usecase.user.CreateUserTest" time="2.613"/>
-  <testcase name="createUser returns error when user name is invalid" classname="usecase.user.CreateUserTest" time="0.007"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

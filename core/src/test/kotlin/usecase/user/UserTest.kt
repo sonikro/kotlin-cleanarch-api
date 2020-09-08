@@ -5,7 +5,7 @@ import domain.exception.BusinessException
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import usecase.repository.UserRepository
 import kotlin.test.assertFailsWith
 import kotlin.test.expect
@@ -31,8 +31,7 @@ class UserTest {
         val userRepository = mockk<UserRepository>()
         every { userRepository.createUser(user) } returns 1L
         assertFailsWith<BusinessException> {
-            val userId = createUserUseCase(userRepository).invoke(user)
-
+            createUserUseCase(userRepository).invoke(user)
         }
     }
 }

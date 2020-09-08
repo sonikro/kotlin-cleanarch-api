@@ -7,7 +7,6 @@ import javax.inject.Singleton
 @Factory
 internal class UserRepositoryFactory {
     @Singleton
-    fun userRepository(): UserRepositoryInMemory {
-        return UserRepositoryInMemory()
-    }
+    fun userRepository(): UserRepositoryInMemory = UserRepositoryInMemory()
+
 }

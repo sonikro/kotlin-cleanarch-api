@@ -1,29 +1,22 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
     id("org.jetbrains.kotlin.kapt") version "1.3.72"
     id("org.jetbrains.kotlin.plugin.allopen") version "1.3.72"
-    id("com.github.johnrengelman.shadow") version "6.0.0"
+    id("com.github.johnrengelman.shadow") version "5.1.0"
     application
 }
-group = "com.sonikro"
-version = "1.0-SNAPSHOT"
 
 val micronautVersion = "2.0.1"
 val kotlinVersion = "1.3.72"
 
-repositories {
-    mavenCentral()
-    jcenter()
-    maven {
-        url = uri("https://dl.bintray.com/kotlin/ktor")
-    }
-}
 dependencies {
+    //Modules
     implementation(project(":core"))
     implementation(project(":providers"))
-
+    //External
     kapt(platform("io.micronaut:micronaut-bom:$micronautVersion"))
     kapt("io.micronaut:micronaut-inject-java")
     kapt("io.micronaut:micronaut-validation")
@@ -46,6 +39,7 @@ dependencies {
     implementation("io.micronaut.xml:micronaut-jackson-xml")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    //Tests
     kaptTest(enforcedPlatform("io.micronaut:micronaut-bom:$micronautVersion"))
     kaptTest("io.micronaut:micronaut-inject-java")
     testImplementation(enforcedPlatform("io.micronaut:micronaut-bom:$micronautVersion"))
@@ -73,16 +67,6 @@ kapt {
     }
 }
 
-tasks {
-    named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveBaseName.set("shadow")
-        mergeServiceFiles()
-        manifest {
-            attributes(mapOf("Main-Class" to "com.sonikro.Server"))
-        }
-    }
-}
-
 tasks.withType<JavaExec> {
     jvmArgs("-XX:TieredStopAtLevel=1", "-Dcom.sun.management.jmxremote")
     if (gradle.startParameter.isContinuous) {
@@ -91,5 +75,22 @@ tasks.withType<JavaExec> {
             "micronaut.io.watch.enabled" to "true",
             "micronaut.io.watch.paths" to "src/main"
         )
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+tasks.withType<ShadowJar>() {
+    mergeServiceFiles()
+    manifest {
+        attributes["Main-Class"] = application.mainClassName
+    }
+}
+
+tasks {
+    assemble {
+        dependsOn(shadowJar)
     }
 }

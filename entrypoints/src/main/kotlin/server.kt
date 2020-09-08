@@ -14,6 +14,6 @@ object Api {
 fun main(args: Array<String>) {
     Micronaut.build()
         .args(*args)
-        .packages("com.example")
+        .packages("com.sonikro")
         .start()
 }

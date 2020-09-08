@@ -1,7 +1,9 @@
-group = "com.sonikro"
-version = "1.0-SNAPSHOT"
+allprojects {
+    group = "com.sonikro"
+    version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
 }
-
